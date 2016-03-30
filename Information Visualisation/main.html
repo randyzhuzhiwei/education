@@ -1,0 +1,262 @@
+<!DOCTYPE html> <html> <head> <meta charset="UTF-8"> <title>Information
+Visualisation - Assignment 1</title> <style>
+.bar {
+  fill: steelblue;
+}
+
+.bar:hover {
+  fill: brown;
+}
+
+.axis {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after {
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
+}
+
+</style>
+<body>
+<script src="d3-master/d3.min.js"></script>
+<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js">
+</script>
+</head>
+
+<body>
+Enter your data:
+<form name="form1">
+<input type="text" name="input" id="input" ><br><br>
+<input type="button" value="Process" onclick="getFrequency()">
+<input type="radio" checked="checked" name="sOption" onclick="sortByAlphabet()"/> Sort by Alphabet 
+<input type="radio" name="sOption" onclick="sortByFrequency()"/> Sort by Frequency 
+</form>
+
+<svg id="chart">
+</svg>
+<script>
+
+	var alphabet={};
+	var data=[];
+    var freq = {}; //Set empty array
+	
+	alphabet= "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
+	for (index = 0; index < alphabet.length; ++index) {
+    var temp={};
+	temp["letter"]=alphabet[index];
+	temp["frequency"]=0;
+	data.push(temp);
+	}
+	
+var outerWidth = 600, outerHeight = 400;
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+	
+var x = d3.scale.ordinal()
+    .rangeRoundBands([0, width], .1);
+	
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+	
+var tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([-10, 0])
+  .html(function(d) {
+    return "<strong>Frequency:</strong> <span style='color:red'>" + d.frequency + "</span>";
+  })
+  
+var svg = d3.select("#chart")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	
+svg.call(tip);
+
+  x.domain(data.map(function(d) {  return d.letter; }));
+  y.domain([0, d3.max(data, function(d) {  return d.frequency; })]);  
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Frequency");
+
+  svg.selectAll(".bar")
+      .data(data)
+    .enter().append("rect")
+      .attr("class", "bar")
+      .attr("x", function(d) { return x(d.letter); })
+      .attr("width", x.rangeBand())
+      .attr("y", function(d) { return y(d.frequency); })
+      .attr("height", function(d) { return height - y(d.frequency); })
+	  .on('mouseover', tip.show)
+      .on('mouseout', tip.hide);
+
+
+function updateChart()
+{
+
+svg.call(tip);
+  x.domain(data.map(function(d) {  return d.letter; }));
+  y.domain([0, d3.max(data, function(d) { return d.frequency; })]);
+
+  svg.select(".x.axis").remove();
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+	  
+  svg.select(".y.axis").remove();
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Frequency");
+	
+	
+  svg.selectAll(".bar").remove();
+  var bar = svg.selectAll(".bar")
+            .data(data, function(d) { return d.name; });
+ 
+	
+   svg.selectAll(".bar")
+      .data(data)
+    .enter().append("rect")
+      .attr("class", "bar")
+      .attr("x", function(d) { return x(d.letter); })
+      .attr("width", x.rangeBand())
+      .attr("y", function(d) { return y(d.frequency); })
+      .attr("height", function(d) { return height - y(d.frequency); })
+	  .on('mouseover', tip.show)
+      .on('mouseout', tip.hide);
+
+//});
+}
+function type(d) {
+  d.frequency = +d.frequency;
+  return d;
+}
+//Get frequency of the alphaberts and put them into an array
+function getFrequency() {
+
+	var string=document.getElementById("input").value; //Get value of input
+
+	var string = string.toUpperCase(); //Convert all to uppercase
+	
+	string=string.replace(/[^A-Z]/g,""); //Regular Expression to replace all other than whitelist "A-Z" to nothing
+
+	freq=[];
+	//Loop through string length and freq array with character and charcter count
+    for (var i=0; i<string.length;i++) {
+        var character = string.charAt(i);
+        if (freq[character]) {
+           freq[character]++;
+        } else {
+           freq[character] = 1;
+        }
+    }
+	pushData();
+
+    updateChart();
+}
+function pushData()
+{
+	data=[];
+	for (index = 0; index < alphabet.length; ++index) {
+    var temp={};
+
+	if (typeof freq[alphabet[index]] != 'undefined') // Any scope
+	{
+	temp["letter"]=alphabet[index];
+	temp["frequency"]=freq[alphabet[index]];
+	data.push(temp);
+	}
+	else
+	{
+	temp["letter"]=alphabet[index];
+	temp["frequency"]=0;
+	data.push(temp);
+	}
+}
+}
+function sortByFrequency()
+{
+	data.sort(function(a,b) {
+    return b.frequency - a.frequency;
+});
+    updateChart();
+}
+function sortByAlphabet()
+{
+	data.sort(function(a,b) {
+     if (a.letter < b.letter) //sort string ascending
+		  return -1 
+		 if (a.letter > b.letter)
+		  return 1
+		 return 0 //default return value (no sorting)
+});
+    updateChart();
+}
+</script>
+
+</body>
+
+</html>
